@@ -1,4 +1,5 @@
 import mongoose, {Schema} from "mongoose";
+import bcrypt from "bcrypt";
 
 const adminSchema = new Schema(
     {
@@ -13,7 +14,8 @@ const adminSchema = new Schema(
             type: String,
             required: true,
             unique: true,
-            lowecase: true
+            lowercase: true,
+            trim: true
         },
         password:{
             type: String,
@@ -27,5 +29,12 @@ const adminSchema = new Schema(
         timestamps: true
     }
 )
+
+adminSchema.pre("save", async function (next) {
+    if(!this.isModified("password")) return next();
+
+    this.password = await bcrypt.hash(this.password, 10)
+    next()
+})
 
 export const Admin = mongoose.model("Admin", adminSchema)
