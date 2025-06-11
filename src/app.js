@@ -14,4 +14,8 @@ app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
 
+import adminRouter from "./routes/admin.routes.js";
+
+app.use("/api/v1/admins", adminRouter);
+
 export { app }
