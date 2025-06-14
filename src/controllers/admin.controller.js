@@ -16,7 +16,7 @@ const generateAccessAndRefereshTokens = async(adminId) =>{
 
 
     } catch (err) {
-        console.error("Error:", err);
+        console.error("Access and Refresh Token Generation Error:", err);
         
     }
 }
@@ -107,4 +107,56 @@ const logoutAdmin = async(req, res) =>{
     }
 }
 
-export { loginAdmin, logoutAdmin };
+const refreshAccessToken = async(req, res) =>{
+     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingRefreshToken) {
+        return res.status(401).json({
+                success: false,
+                message: "Unauthorized request - No refresh token provided"
+            });
+    }
+
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+        const admin = await Admin.findById(decodedToken?._id)
+    
+        if (!admin) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid Refresh Token - Admin not found"
+            });
+        }
+    
+        if (incomingRefreshToken !== admin?.refreshToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token is expired or has been used"
+            });
+            
+        }
+    
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+    
+        const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(admin._id)
+    
+        return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options).json({
+            success: true,
+            message: "Access token refreshed Successfully",
+            accessToken,
+            refreshToken
+        });
+    } catch (err) {
+        console.error("Refresh Token Error:", err);
+        return res.status(401).json({
+            success: false,
+            message: err?.message || "Invalid refresh token"
+        });
+    }
+}
+
+export { loginAdmin, logoutAdmin, refreshAccessToken };
