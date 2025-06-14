@@ -17,10 +17,7 @@ const generateAccessAndRefereshTokens = async(adminId) =>{
 
     } catch (err) {
         console.error("Error:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Something went wrong while generating access and refresh token of admin"
-        })
+        
     }
 }
 
@@ -77,4 +74,37 @@ const loginAdmin = async(req, res)=>{
     }
 }
 
-export { loginAdmin };
+
+const logoutAdmin = async(req, res) =>{
+    try{
+        await Admin.findByIdAndUpdate(
+            req.admin._id,
+            {
+                $unset: {
+                    refreshToken: 1 // this removes the field from document
+                }
+            },
+            {
+                new: true
+            }
+        );
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        return res.status(200).clearCookie("accessToken", options).clearCookie("refreshToken", options).json({
+            success: true,
+            message: "Admin Logged Out Successfully"
+        });
+    }catch(err){
+        console.error("Server Error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to Log Out Admin"
+        })
+    }
+}
+
+export { loginAdmin, logoutAdmin };
