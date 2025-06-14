@@ -15,7 +15,10 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 import adminRouter from "./routes/admin.routes.js";
+import projectRouter from "./routes/project.routes.js";
+
 
 app.use("/api/v1/admins", adminRouter);
+app.use("/api/v1/projects", projectRouter);
 
 export { app }
