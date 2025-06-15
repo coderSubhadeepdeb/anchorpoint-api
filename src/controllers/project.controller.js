@@ -1,5 +1,6 @@
 import { Project } from "../models/project.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import fs from 'fs/promises';
 
 
 const createProject = async (req, res) => {
@@ -7,6 +8,24 @@ const createProject = async (req, res) => {
     let imageUrls = [];
      try {
         const { title, description } = req.body;
+
+        if (!title || !description) {
+            if (req.files?.images) {
+                const files = Array.isArray(req.files.images) 
+                    ? req.files.images 
+                    : [req.files.images];
+                
+                await Promise.all(files.map(file => {
+                    return fs.unlink(file.path).catch(err => {
+                        console.error(`Failed to delete ${file.path}:`, err);
+                    });
+                }));
+            }
+            return res.status(400).json({
+                success: false,
+                message: "Title and description are required"
+            });
+        }
         
         // Check if files were uploaded
         if (!req.files || req.files.images.length === 0) {
