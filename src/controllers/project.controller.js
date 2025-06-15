@@ -80,4 +80,30 @@ const createProject = async (req, res) => {
     }
 };
 
-export { createProject };
+
+const getAllProjectsNewestFirst = async (req, res) => {
+  try {
+    // Fetch projects sorted by creation date (newest first)
+    const projects = await Project.find({})
+      .sort({ createdAt: -1 });  // No .exec() needed here
+
+    return res.status(200).json({
+      success: true,
+      message: projects.length > 0 
+        ? "Projects fetched successfully" 
+        : "No projects found",
+      count: projects.length,
+      data: projects
+    });
+
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch projects",
+      error: error.message  // Always show error details
+    });
+  }
+};
+
+export { createProject, getAllProjectsNewestFirst };
