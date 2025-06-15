@@ -1,6 +1,7 @@
 import { Project } from "../models/project.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import fs from 'fs/promises';
+import mongoose from "mongoose";
 
 
 const createProject = async (req, res) => {
@@ -106,4 +107,71 @@ const getAllProjectsNewestFirst = async (req, res) => {
   }
 };
 
-export { createProject, getAllProjectsNewestFirst };
+
+const deleteProject = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Validate ID format (optional but recommended)
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid project ID format"
+            });
+        }
+
+        const project = await Project.findById(id);
+    
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found"
+            });
+        }
+        
+        if (project.images && project.images.length > 0) {
+            await Promise.all(
+                project.images.map(async (imageUrl) => {
+                    if (!imageUrl) return;
+                    try {
+                        // Extract public ID from Cloudinary URL
+                        const urlParts = imageUrl.split('/');
+                        const publicId = urlParts[urlParts.length - 1].split('.')[0];
+                        await deleteFromCloudinary(`anchorpointprojects/${publicId}`);
+                    } catch (error) {
+                        console.error(`Failed to delete image ${imageUrl}:`, error);
+                    }
+                })
+            );
+        }
+
+
+        const deletedProject = await Project.findByIdAndDelete(id);
+
+        if (!deletedProject) {
+            return res.status(500).json({
+                success: false,
+                message: "Database deletion failed after image cleanup",
+                projectId: id 
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Project deleted successfully",
+            data: {
+                id: deletedProject._id,
+                title: deletedProject.title
+            }
+        });
+
+    } catch (error) {
+        console.error('Delete error:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete project", 
+        });
+    }
+};
+
+export { createProject, getAllProjectsNewestFirst, deleteProject };
