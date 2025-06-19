@@ -109,6 +109,67 @@ const getAllProjectsNewestFirst = async (req, res) => {
 };
 
 
+const getProjectById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Validate ID format
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid project ID format"
+            });
+        }
+
+        const project = await Project.findById(id);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Project fetched successfully",
+            data: project
+        });
+
+    } catch (error) {
+        console.error('Error fetching project:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch project",
+            error: error.message
+        });
+    }
+};
+
+const getProjectsByCategory = async (req, res) => {
+    try {
+        const { category } = req.params;
+        const projects = await Project.find({ category }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            message: projects.length > 0
+            ? `Projects in category '${category}' fetched successfully`
+            : `No projects found in category '${category}'`,
+            count: projects.length,
+            data: projects
+        });
+
+    } catch (error) {
+        console.error('Error fetching projects by category:', error);
+        return res.status(500).json({
+        success: false,
+        message: "Failed to fetch projects by category",
+        error: error.message
+        });
+    }
+};
+
 const deleteProject = async (req, res) => {
     try {
         const { id } = req.params;
@@ -175,4 +236,4 @@ const deleteProject = async (req, res) => {
     }
 };
 
-export { createProject, getAllProjectsNewestFirst, deleteProject };
+export { createProject, getAllProjectsNewestFirst, deleteProject, getProjectById, getProjectsByCategory };

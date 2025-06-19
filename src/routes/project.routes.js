@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createProject, deleteProject, getAllProjectsNewestFirst } from "../controllers/project.controller.js";
+import { createProject, deleteProject, getAllProjectsNewestFirst, getProjectById, getProjectsByCategory } from "../controllers/project.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -15,6 +15,8 @@ router.route("/add").post(
 );
 
 router.route("/").get(getAllProjectsNewestFirst);
+router.route("/:id").get(getProjectById);
+router.route("/category/:category").get(getProjectsByCategory);
 
 router.route("/:id").delete(deleteProject);
 
