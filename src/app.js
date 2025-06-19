@@ -16,9 +16,11 @@ app.use(cookieParser())
 
 import adminRouter from "./routes/admin.routes.js";
 import projectRouter from "./routes/project.routes.js";
+import contactRouter from "./routes/contact.routes.js";
 
 
 app.use("/api/v1/admins", adminRouter);
 app.use("/api/v1/projects", projectRouter);
+app.use("/api/v1/contact", contactRouter);
 
 export { app }
