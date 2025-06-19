@@ -8,7 +8,7 @@ router.route("/add").post(
     upload.fields([
     {
       name: "images",
-      maxCount: 10 // Maximum 10 images
+      maxCount: 15 // Maximum 15 images
     }
     ]),
     createProject

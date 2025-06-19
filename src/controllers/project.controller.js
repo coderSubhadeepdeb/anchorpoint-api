@@ -8,9 +8,9 @@ const createProject = async (req, res) => {
 
     let imageUrls = [];
      try {
-        const { title, description } = req.body;
+        const { title, description, category } = req.body;
 
-        if (!title || !description) {
+        if (!title || !description || !category) {
             if (req.files?.images) {
                 const files = Array.isArray(req.files.images) 
                     ? req.files.images 
@@ -54,6 +54,7 @@ const createProject = async (req, res) => {
         const project = await Project.create({
             title,
             description,
+            category,
             images: validImageUrls
         });
 

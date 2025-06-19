@@ -10,6 +10,10 @@ const projectSchema = new Schema(
             type: String,
             required: true
         },
+        category:{
+            type: String,
+            required: true
+        },
         images:[
             {
                 type: String,
