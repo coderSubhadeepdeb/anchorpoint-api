@@ -22,7 +22,10 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.1",
+<<<<<<< HEAD
     "multer": "^2.0.1",
+=======
+>>>>>>> 397dd4d079871fac94f4866fe182672873aef65b
     "nodemailer": "^7.0.3"
   }
 }
