@@ -6,9 +6,9 @@ import mongoose from "mongoose";
 
 const createProject = async (req, res) => {
 
-    let imageUrls = [];
+    let imageObjects = [];
      try {
-        const { title, description, category } = req.body;
+        const { title, description, category, videoLink, imageTitles, imageDescriptions  } = req.body;
 
         if (!title || !description || !category) {
             if (req.files?.images) {
@@ -24,7 +24,7 @@ const createProject = async (req, res) => {
             }
             return res.status(400).json({
                 success: false,
-                message: "Title and description are required"
+                message: "Title, description, and category are required"
             });
         }
         
@@ -35,18 +35,25 @@ const createProject = async (req, res) => {
             });
         }
 
+        const parsedImageTitles = imageTitles ? JSON.parse(imageTitles) : [];
+        const parsedImageDescriptions = imageDescriptions ? JSON.parse(imageDescriptions) : [];
+
         // Upload images to Cloudinary
-        const imageUploadPromises = req.files.images.map(async (file) => {
+        const imageUploadPromises = req.files.images.map(async (file, index) => {
             const result = await uploadOnCloudinary(file.path);
-            return result.secure_url;
+            return {
+                src: result.secure_url,
+                title: parsedImageTitles[index] || "",
+                description: parsedImageDescriptions[index] || ""
+            };
         });
 
-        imageUrls = await Promise.all(imageUploadPromises);
+        imageObjects = await Promise.all(imageUploadPromises);
 
         // Filter out any failed uploads
-        const validImageUrls = imageUrls.filter(url => url !== null);
+        const validImageObjects = imageObjects.filter(img => img.src !== null);
     
-        if (validImageUrls.length === 0) {
+        if (validImageObjects.length === 0) {
             return res.status(500).json({ message: "Failed to upload images" });
         }
 
@@ -55,7 +62,8 @@ const createProject = async (req, res) => {
             title,
             description,
             category,
-            images: validImageUrls
+            videoLink: videoLink || "",
+            images: validImageObjects
         });
 
         return res.status(201).json({
@@ -66,10 +74,10 @@ const createProject = async (req, res) => {
 
     } catch (error) {
         // Cleanup: Delete any images that were uploaded to Cloudinary but project creation failed
-        if (imageUrls && imageUrls.length > 0) {
-            await Promise.all(imageUrls.map(url => {
-                if (url) {
-                const publicId = url.split('/').pop().split('.')[0];
+        if (imageObjects && imageObjects.length > 0) {
+            await Promise.all(imageObjects.map(image => {
+                if (image && image.src) {
+                const publicId = image.src.split('/').pop().split('.')[0];
                 return deleteFromCloudinary(`anchorpointprojects/${publicId}`);
                 }
             }));
@@ -193,15 +201,15 @@ const deleteProject = async (req, res) => {
         
         if (project.images && project.images.length > 0) {
             await Promise.all(
-                project.images.map(async (imageUrl) => {
-                    if (!imageUrl) return;
+                project.images.map(async (image) => {
+                    if (!image.src) return;
                     try {
                         // Extract public ID from Cloudinary URL
-                        const urlParts = imageUrl.split('/');
+                        const urlParts = image.src.split('/');
                         const publicId = urlParts[urlParts.length - 1].split('.')[0];
                         await deleteFromCloudinary(`anchorpointprojects/${publicId}`);
                     } catch (error) {
-                        console.error(`Failed to delete image ${imageUrl}:`, error);
+                        console.error(`Failed to delete image ${image.src}:`, error);
                     }
                 })
             );

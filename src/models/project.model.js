@@ -14,10 +14,26 @@ const projectSchema = new Schema(
             type: String,
             required: true
         },
+        videoLink: {
+            type: String,
+            required: false
+        },
         images:[
             {
-                type: String,
-                required: false
+                src: {
+                    type: String,
+                    required: true
+                },
+                title: {
+                    type: String,
+                    required: false,
+                    default: ""
+                },
+                description: {
+                    type: String,
+                    required: false,
+                    default: ""
+                }
             }
         ]
     },
